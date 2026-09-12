@@ -1,0 +1,8 @@
+{
+  "name": "Farmer Credit Intelligence Platform",
+  "description": "Agricultural credit assessment system with verified data and community trust",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
