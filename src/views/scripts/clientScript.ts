@@ -5,6 +5,7 @@ export function renderClientScript(): string {
   // ==========================================
   // GLOBAL STATE
   // ==========================================
+  let currentUser = null; // { role: 'farmer'|'fpo'|'lender', farmerId?: number, name: string, entity: string, avatar: string }
   let currentRole = 'farmer'; // 'farmer' | 'fpo' | 'lender'
   let currentFarmerId = 1; // 1: Ramesh Kumar, 2: Rajendra Patil, 3: Sunita Deshmukh
   let activeTab = 'farmer-overview';
@@ -262,6 +263,11 @@ export function renderClientScript(): string {
     // Re-render nav highlights
     updateSidebarNav();
 
+    // Auto-close mobile sidebar drawer
+    if (typeof window.toggleSidebar === 'function') {
+      window.toggleSidebar(false);
+    }
+
     // Immediate tab-specific data rendering & chart triggers
     if (tabId === 'farmer-market') {
       setTimeout(renderMarketChart, 50);
@@ -277,6 +283,11 @@ export function renderClientScript(): string {
       populateLenderPipelineTable();
     } else if (tabId === 'farmer-consent') {
       renderConsentTable();
+    } else if (tabId === 'farmer-profile' || tabId === 'profile' || tabId === 'farm') {
+      const targetProf = document.getElementById('tab-farmer-profile');
+      if (targetProf) targetProf.classList.remove('hidden');
+      const f = cachedFarmers.find(x => x.id === currentFarmerId) || cachedFarmers[0];
+      if (f) populateFarmerProfile14(f);
     }
   }
 
@@ -284,14 +295,44 @@ export function renderClientScript(): string {
     if (val.startsWith('farmer-')) {
       currentRole = 'farmer';
       currentFarmerId = parseInt(val.split('-')[1]);
-      switchTab('farmer-overview');
       loadFarmerData(currentFarmerId);
+
+      const f = (cachedFarmers && cachedFarmers.length ? cachedFarmers.find(x => x.id === currentFarmerId) : null) || DEFAULT_SEED_FARMERS.find(x => x.id === currentFarmerId);
+      const initials = f ? f.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'RK';
+      currentUser = {
+        role: 'farmer',
+        farmerId: currentFarmerId,
+        name: f ? f.name : 'Ramesh Kumar',
+        avatar: initials,
+        entity: \`Farmer · \${f ? f.state : 'Tamil Nadu'}\`
+      };
+      localStorage.setItem('kissantrust_session', JSON.stringify(currentUser));
+
+      if (activeTab && activeTab.startsWith('farmer-')) {
+        switchTab(activeTab);
+      } else {
+        switchTab('farmer-overview');
+      }
     } else if (val === 'fpo') {
       currentRole = 'fpo';
+      currentUser = {
+        role: 'fpo',
+        name: 'Thiruvallur Organic FPO',
+        avatar: 'TO',
+        entity: 'FPO Field Officer'
+      };
+      localStorage.setItem('kissantrust_session', JSON.stringify(currentUser));
       switchTab('fpo-overview');
       loadFpoData();
     } else if (val === 'lender') {
       currentRole = 'lender';
+      currentUser = {
+        role: 'lender',
+        name: 'Canara Bank Agri Desk',
+        avatar: 'CB',
+        entity: 'Institutional Underwriter'
+      };
+      localStorage.setItem('kissantrust_session', JSON.stringify(currentUser));
       switchTab('lender-overview');
       loadLenderData();
     }
@@ -302,12 +343,319 @@ export function renderClientScript(): string {
     if (mobileSelect) mobileSelect.value = val;
   }
 
-  function toggleMobileMenu() {
-    const drawer = document.getElementById('mobile-drawer');
-    const backdrop = document.getElementById('mobile-drawer-backdrop');
-    if (drawer) drawer.classList.toggle('-translate-x-full');
-    if (backdrop) backdrop.classList.toggle('hidden');
+  // ==========================================
+  // AUTHENTICATION & SESSION MANAGEMENT
+  // ==========================================
+  function initAuthSession() {
+    const saved = localStorage.getItem('kissantrust_session');
+    if (saved) {
+      try {
+        currentUser = JSON.parse(saved);
+        if (currentUser && currentUser.role) {
+          applyUserSession(currentUser, false);
+          return;
+        }
+      } catch (e) {
+        console.error('Session error', e);
+      }
+    }
+    showLoginOverlay();
   }
+
+  function showLoginOverlay() {
+    const overlay = document.getElementById('login-overlay');
+    const rootLayout = document.querySelector('.app-root-layout');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+    if (rootLayout) {
+      rootLayout.classList.add('hidden');
+    }
+  }
+
+  function hideLoginOverlay() {
+    const overlay = document.getElementById('login-overlay');
+    const rootLayout = document.querySelector('.app-root-layout');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+    if (rootLayout) {
+      rootLayout.classList.remove('hidden');
+    }
+  }
+
+  function loginAsDemo(role, farmerId) {
+    if (role === 'farmer') {
+      const fid = farmerId || 1;
+      const f = (cachedFarmers && cachedFarmers.length ? cachedFarmers.find(x => x.id === fid) : null) || DEFAULT_SEED_FARMERS.find(x => x.id === fid) || DEFAULT_SEED_FARMERS[0];
+      const initials = f ? f.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'RK';
+      currentUser = {
+        role: 'farmer',
+        farmerId: fid,
+        name: f ? f.name : 'Ramesh Kumar',
+        avatar: initials,
+        entity: \`Farmer · \${f ? f.state : 'Tamil Nadu'}\`
+      };
+    } else if (role === 'fpo') {
+      currentUser = {
+        role: 'fpo',
+        name: 'Thiruvallur Organic FPO',
+        avatar: 'TO',
+        entity: 'FPO Field Officer'
+      };
+    } else if (role === 'lender') {
+      currentUser = {
+        role: 'lender',
+        name: 'Canara Bank Agri Desk',
+        avatar: 'CB',
+        entity: 'Institutional Underwriter'
+      };
+    }
+
+    localStorage.setItem('kissantrust_session', JSON.stringify(currentUser));
+    applyUserSession(currentUser, true);
+  }
+
+  function applyUserSession(user, isNewLogin) {
+    hideLoginOverlay();
+    if (!user) return;
+
+    currentRole = user.role;
+
+    // Update Header Avatar & Identity Displays
+    const headerAvatar = document.getElementById('header-avatar');
+    const headerName = document.getElementById('header-user-name');
+    const headerRole = document.getElementById('header-user-role');
+    const dropdownName = document.getElementById('user-dropdown-name');
+    const dropdownRole = document.getElementById('user-dropdown-role');
+
+    if (headerAvatar) headerAvatar.textContent = user.avatar || 'KT';
+    if (headerName) headerName.textContent = user.name || 'User';
+    if (headerRole) headerRole.textContent = user.entity || user.role.toUpperCase();
+    if (dropdownName) dropdownName.textContent = user.name || 'User';
+    if (dropdownRole) dropdownRole.textContent = user.entity || 'Verified Entity';
+
+    if (user.role === 'farmer') {
+      currentFarmerId = user.farmerId || 1;
+      const desktopSelect = document.getElementById('persona-select');
+      const mobileSelect = document.getElementById('mobile-persona-select');
+      if (desktopSelect) desktopSelect.value = 'farmer-' + currentFarmerId;
+      if (mobileSelect) mobileSelect.value = 'farmer-' + currentFarmerId;
+
+      loadFarmerData(currentFarmerId);
+      if (isNewLogin) {
+        switchTab('farmer-profile');
+      } else {
+        switchTab(activeTab || 'farmer-profile');
+      }
+    } else if (user.role === 'fpo') {
+      const desktopSelect = document.getElementById('persona-select');
+      const mobileSelect = document.getElementById('mobile-persona-select');
+      if (desktopSelect) desktopSelect.value = 'fpo';
+      if (mobileSelect) mobileSelect.value = 'fpo';
+
+      loadFpoData();
+      if (isNewLogin) {
+        switchTab('fpo-overview');
+      } else {
+        switchTab(activeTab || 'fpo-overview');
+      }
+    } else if (user.role === 'lender') {
+      const desktopSelect = document.getElementById('persona-select');
+      const mobileSelect = document.getElementById('mobile-persona-select');
+      if (desktopSelect) desktopSelect.value = 'lender';
+      if (mobileSelect) mobileSelect.value = 'lender';
+
+      loadLenderData();
+      if (isNewLogin) {
+        switchTab('lender-overview');
+      } else {
+        switchTab(activeTab || 'lender-overview');
+      }
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('kissantrust_session');
+    currentUser = null;
+    showLoginOverlay();
+  }
+
+  function switchLoginAuthTab(tab) {
+    const quickSec = document.getElementById('auth-section-quick');
+    const stdSec = document.getElementById('auth-section-standard');
+    const quickBtn = document.getElementById('tab-btn-quick-login');
+    const stdBtn = document.getElementById('tab-btn-standard-login');
+
+    if (tab === 'quick') {
+      if (quickSec) quickSec.classList.remove('hidden');
+      if (stdSec) stdSec.classList.add('hidden');
+      if (quickBtn) {
+        quickBtn.classList.add('bg-white', 'text-brand-forest', 'shadow-xs', 'font-bold');
+        quickBtn.classList.remove('text-gray-600');
+      }
+      if (stdBtn) {
+        stdBtn.classList.remove('bg-white', 'text-brand-forest', 'shadow-xs', 'font-bold');
+        stdBtn.classList.add('text-gray-600');
+      }
+    } else {
+      if (quickSec) quickSec.classList.add('hidden');
+      if (stdSec) stdSec.classList.remove('hidden');
+      if (stdBtn) {
+        stdBtn.classList.add('bg-white', 'text-brand-forest', 'shadow-xs', 'font-bold');
+        stdBtn.classList.remove('text-gray-600');
+      }
+      if (quickBtn) {
+        quickBtn.classList.remove('bg-white', 'text-brand-forest', 'shadow-xs', 'font-bold');
+        quickBtn.classList.add('text-gray-600');
+      }
+    }
+  }
+
+  function toggleAuthModeInput(mode) {
+    const otpBox = document.getElementById('input-box-otp');
+    const pwdBox = document.getElementById('input-box-password');
+    if (mode === 'otp') {
+      if (otpBox) otpBox.classList.remove('hidden');
+      if (pwdBox) pwdBox.classList.add('hidden');
+    } else {
+      if (pwdBox) pwdBox.classList.remove('hidden');
+      if (otpBox) otpBox.classList.add('hidden');
+    }
+  }
+
+  function fillMockOtp() {
+    const otpInput = document.getElementById('login-otp');
+    if (otpInput) otpInput.value = '123456';
+  }
+
+  function handleStandardLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const roleSelect = document.getElementById('login-role');
+    const selectedVal = roleSelect ? roleSelect.value : 'farmer-1';
+
+    if (selectedVal.startsWith('farmer-')) {
+      const fid = parseInt(selectedVal.split('-')[1]);
+      loginAsDemo('farmer', fid);
+    } else if (selectedVal === 'fpo') {
+      loginAsDemo('fpo');
+    } else if (selectedVal === 'lender') {
+      loginAsDemo('lender');
+    }
+  }
+
+  // Window bindings
+  window.loginAsDemo = loginAsDemo;
+  window.handleLogout = handleLogout;
+  window.switchLoginAuthTab = switchLoginAuthTab;
+  window.toggleAuthModeInput = toggleAuthModeInput;
+  window.fillMockOtp = fillMockOtp;
+  window.handleStandardLogin = handleStandardLogin;
+  window.showLoginOverlay = showLoginOverlay;
+  window.hideLoginOverlay = hideLoginOverlay;
+
+  window.switchFarmerCase = function(val) {
+    let target = val;
+    if (val === 'A' || val === '1') target = 'farmer-1';
+    else if (val === 'B' || val === '2') target = 'farmer-2';
+    else if (val === 'C' || val === '3') target = 'farmer-3';
+    else if (!val.startsWith('farmer-') && val !== 'fpo' && val !== 'lender') {
+      target = 'farmer-' + val;
+    }
+    onPersonaChange(target);
+  };
+
+  window.openModal = function(modalId) {
+    if (modalId === 'modal-onboard-farmer' || modalId === 'modal-new-farmer' || modalId === 'onboard') {
+      openNewFarmerModal();
+      return;
+    }
+    if (modalId === 'modal-dossier' || modalId === 'modal-assessment' || modalId === 'dossier') {
+      openAssessmentModal(currentFarmerId);
+      return;
+    }
+    if (modalId === 'modal-report' || modalId === 'audit-reports' || modalId === 'report') {
+      openReportModal();
+      return;
+    }
+    const el = document.getElementById(modalId);
+    if (el) {
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+  };
+
+  window.closeModal = function(modalId) {
+    if (modalId === 'modal-onboard-farmer' || modalId === 'modal-new-farmer' || modalId === 'onboard') {
+      closeNewFarmerModal();
+      return;
+    }
+    if (modalId === 'modal-dossier' || modalId === 'modal-assessment') {
+      closeAssessmentModal();
+      return;
+    }
+    if (modalId === 'modal-report') {
+      closeReportModal();
+      return;
+    }
+    const el = document.getElementById(modalId);
+    if (el) {
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+  };
+
+  window.toggleUserDropdown = function(e) {
+    if (e && typeof e.stopPropagation === 'function') {
+      e.stopPropagation();
+    }
+    const dropdown = document.getElementById('user-profile-dropdown');
+    if (dropdown) {
+      dropdown.classList.toggle('hidden');
+    }
+  };
+
+  // Close user dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('user-profile-dropdown');
+    const wrapper = document.getElementById('user-profile-wrapper');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+
+    const target = e.target;
+    if (target && wrapper && !wrapper.contains(target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  window.toggleSidebar = function(forceState) {
+    const sidebar = document.getElementById('app-sidebar') || document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('sidebar-backdrop') || document.getElementById('mobile-drawer-backdrop');
+    if (!sidebar) return;
+
+    let shouldOpen;
+    if (typeof forceState === 'boolean') {
+      shouldOpen = forceState;
+    } else {
+      shouldOpen = sidebar.classList.contains('-translate-x-full');
+    }
+
+    if (shouldOpen) {
+      sidebar.classList.remove('-translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      if (backdrop) backdrop.classList.remove('hidden');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+      sidebar.classList.remove('translate-x-0');
+      if (backdrop) backdrop.classList.add('hidden');
+    }
+  };
+
+  function toggleMobileMenu(forceState) {
+    window.toggleSidebar(forceState);
+  }
+  window.toggleMobileMenu = toggleMobileMenu;
 
   function toggleLiveDrawer() {
     const drawer = document.getElementById('event-drawer');
@@ -753,6 +1101,11 @@ export function renderClientScript(): string {
       if (refBadge) refBadge.textContent = farmer.reference_id || \`KT-00\${farmer.id}\`;
       if (meta) meta.textContent = \`\${farmer.village || farmer.location}, \${farmer.district || ''}, \${farmer.state} · \${farmer.land_size_acres} Acres · \${farmer.crop_types?.join(', ') || 'Crops'}\`;
       if (headerRole) headerRole.textContent = \`Farmer · \${farmer.state}\`;
+
+      const dropdownName = document.getElementById('user-dropdown-name');
+      const dropdownRole = document.getElementById('user-dropdown-role');
+      if (dropdownName) dropdownName.textContent = farmer.name;
+      if (dropdownRole) dropdownRole.textContent = \`Verified Farmer Entity · \${farmer.crop_types?.[0] || 'Crop'} \${farmer.land_size_acres} Ac\`;
 
       // Confidence & Risk
       const confBadge = document.getElementById('ov-evidence-score');
@@ -2764,6 +3117,7 @@ export function renderClientScript(): string {
     updateSidebarNav();
     updatePlannerPreview();
     onSimulatorChange();
+    initAuthSession();
   });
   </script>
   `;

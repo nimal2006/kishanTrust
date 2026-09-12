@@ -1,6 +1,7 @@
 import http from "node:http";
 import express, { Request, Response } from "express";
 import cors from "cors";
+import { spawn } from "node:child_process";
 import { farmersRouter } from "./src/routes/farmers.js";
 import { fpoRouter } from "./src/routes/fpo.js";
 import { assessmentsRouter } from "./src/routes/assessments.js";
@@ -151,4 +152,18 @@ realtimeHub.init(server);
 
 server.listen(PORT, HOST, () => {
   console.log(`KissanTrust platform running on http://${HOST}:${PORT} (Realtime WebSockets active)`);
+
+  // Boot Python Scikit-Learn + FastAPI Credit Risk Microservice
+  try {
+    const fastApiProcess = spawn("python3", ["ml_service/app.py"], {
+      stdio: "inherit",
+      detached: false,
+    });
+    fastApiProcess.on("error", (err) => {
+      console.warn("FastAPI ML service failed to spawn:", err.message);
+    });
+    console.log("⚡ Spawned Python Scikit-Learn + FastAPI ML microservice process (Port 8000)...");
+  } catch (err) {
+    console.warn("Unable to spawn FastAPI process:", (err as Error).message);
+  }
 });

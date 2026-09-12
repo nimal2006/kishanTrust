@@ -11,34 +11,34 @@ export function renderFarmerWorkspaceHtml(): string {
     <div id="farmer-sanction-banner" class="hidden"></div>
 
     <!-- 1. Compact Top Farmer Identity Strip -->
-    <div class="bg-white rounded-xl p-3.5 sm:p-4 border border-brand-borderSubtle card-shadow">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="bg-white rounded-xl p-4 border border-brand-borderSubtle card-shadow">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-stone-200 dark:border-stone-800">
         <!-- Identity & Status -->
         <div class="flex items-center gap-3">
           <div id="ov-avatar" class="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center font-serif text-lg font-bold shadow-xs shrink-0">
             RK
           </div>
           <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <h2 id="ov-farmer-name" class="serif-title text-lg sm:text-xl font-bold text-brand-forest truncate">Ramesh Kumar</h2>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h2 id="ov-farmer-name" class="serif-title text-lg sm:text-xl font-bold text-brand-forest">Ramesh Kumar</h2>
               <span id="ov-ref-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-paleBg border border-brand-borderSubtle text-gray-700">KT-TN-THIRU-0104</span>
               <span id="ov-verif-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 ✓ FPO Verified
               </span>
             </div>
-            <p id="ov-farmer-meta" class="text-[11px] text-gray-600 truncate mt-0.5">
+            <p id="ov-farmer-meta" class="text-xs text-stone-500 dark:text-stone-400 mt-1">
               Nemam Village, Thiruvallur, Tamil Nadu · Thiruvallur Agro Collective Member · 3.5 Acres
             </p>
           </div>
         </div>
 
         <!-- Quick Primary Actions -->
-        <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-          <button onclick="switchTab('farmer-stresstest')" class="px-3 py-1.5 bg-brand-forest text-white rounded-lg text-xs font-semibold hover:bg-brand-forestHover transition shadow-xs flex items-center gap-1">
+        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <button onclick="switchTab('farmer-stresstest')" class="h-9 px-4 bg-brand-forest text-white rounded-lg text-xs font-semibold hover:bg-brand-forestHover transition shadow-xs flex items-center justify-center gap-1 w-full sm:w-auto">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             <span>Run Stress Test</span>
           </button>
-          <button onclick="switchTab('farmer-simulator')" class="px-3 py-1.5 bg-white border border-brand-borderSubtle text-brand-forest rounded-lg text-xs font-semibold hover:bg-brand-sageLight transition">
+          <button onclick="switchTab('farmer-simulator')" class="h-9 px-4 bg-white border border-brand-borderSubtle text-brand-forest rounded-lg text-xs font-semibold hover:bg-brand-sageLight transition flex items-center justify-center w-full sm:w-auto">
             Simulator
           </button>
         </div>
@@ -46,46 +46,43 @@ export function renderFarmerWorkspaceHtml(): string {
     </div>
 
     <!-- 2. CORE FINANCIAL DECISION STRIP (Section 4 & 11: Compact 5-KPI Grid) -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full my-4">
       <!-- KPI 1: Requested Credit -->
-      <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-brand-borderSubtle card-shadow">
-        <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Requested Credit</span>
-        <p id="sum-requested" class="serif-title text-lg sm:text-xl font-bold text-gray-900 mt-1">₹2,00,000</p>
-        <span class="text-[10px] text-gray-500 mt-0.5 block truncate">Working Capital</span>
+      <div class="bg-white rounded-xl p-4 border border-brand-borderSubtle card-shadow min-h-[105px] flex flex-col justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block">Requested Credit</span>
+        <p id="sum-requested" class="text-xl font-bold tracking-tight text-stone-900 dark:text-white font-mono my-1">₹2,00,000</p>
+        <span class="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-snug block truncate">Working Capital</span>
       </div>
 
-      <!-- KPI 2: Recommended Safe Range (Decision Support) -->
-      <div class="bg-emerald-50/80 rounded-xl p-3 sm:p-3.5 border border-emerald-200 card-shadow relative">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] uppercase font-bold text-emerald-900 tracking-wider block">Recommended</span>
-          <span class="text-[8px] bg-emerald-200/90 text-emerald-900 px-1 py-0.2 rounded font-bold">Support</span>
-        </div>
-        <p id="sum-recommended" class="serif-title text-base sm:text-lg font-bold text-emerald-950 mt-1 truncate">₹1,20,000 – ₹1,40,000</p>
-        <span class="text-[10px] text-emerald-800 font-medium mt-0.5 block truncate">Stress-Tested Safe Ceiling</span>
+      <!-- KPI 2: Recommended Safe Range -->
+      <div class="bg-emerald-50/80 rounded-xl p-4 border border-emerald-200 card-shadow min-h-[105px] flex flex-col justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block">Recommended</span>
+        <p id="sum-recommended" class="text-xl font-bold tracking-tight text-stone-900 dark:text-white font-mono my-1 truncate">₹1,20,000 – ₹1,40,000</p>
+        <span class="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-snug block truncate">Stress-Tested Safe Ceiling</span>
       </div>
 
       <!-- KPI 3: Repayment Capacity -->
-      <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-brand-borderSubtle card-shadow">
-        <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Repayment Capacity</span>
-        <p id="sum-repayment" class="serif-title text-lg sm:text-xl font-bold text-brand-forest mt-1">₹65,000</p>
-        <span class="text-[10px] text-gray-500 mt-0.5 block truncate">Downside Stressed Buffer</span>
+      <div class="bg-white rounded-xl p-4 border border-brand-borderSubtle card-shadow min-h-[105px] flex flex-col justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block">Repayment Capacity</span>
+        <p id="sum-repayment" class="text-xl font-bold tracking-tight text-brand-forest font-mono my-1">₹65,000</p>
+        <span class="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-snug block truncate">Downside Stressed Buffer</span>
       </div>
 
       <!-- KPI 4: Agricultural Risk -->
-      <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-brand-borderSubtle card-shadow">
-        <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Agricultural Risk</span>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span id="sum-risk-dot" class="w-2 h-2 rounded-full bg-amber-500"></span>
-          <p id="sum-risk" class="text-base sm:text-lg font-bold text-gray-800">Moderate</p>
+      <div class="bg-white rounded-xl p-4 border border-brand-borderSubtle card-shadow min-h-[105px] flex flex-col justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block">Agricultural Risk</span>
+        <div class="flex items-center gap-1.5 my-1">
+          <span id="sum-risk-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+          <p id="sum-risk" class="text-xl font-bold tracking-tight text-stone-900 dark:text-white font-mono">Moderate</p>
         </div>
-        <span id="sum-risk-sub" class="text-[10px] text-gray-500 mt-0.5 block truncate">Price Glut Sensitivity</span>
+        <span id="sum-risk-sub" class="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-snug block truncate">Price Glut Sensitivity</span>
       </div>
 
       <!-- KPI 5: Evidence Confidence -->
-      <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-brand-borderSubtle card-shadow col-span-2 sm:col-span-1">
-        <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">Evidence Confidence</span>
-        <p id="sum-confidence" class="serif-title text-lg sm:text-xl font-bold text-emerald-700 mt-1">88%</p>
-        <span id="sum-confidence-sub" class="text-[10px] text-gray-500 mt-0.5 block truncate">4 of 4 Claims Verified</span>
+      <div class="bg-white rounded-xl p-4 border border-brand-borderSubtle card-shadow min-h-[105px] flex flex-col justify-between col-span-2 sm:col-span-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block">Evidence Confidence</span>
+        <p id="sum-confidence" class="text-xl font-bold tracking-tight text-emerald-700 font-mono my-1">88%</p>
+        <span id="sum-confidence-sub" class="text-xs text-stone-500 dark:text-stone-400 mt-1 leading-snug block truncate">4 of 4 Claims Verified</span>
       </div>
     </div>
 
@@ -96,14 +93,14 @@ export function renderFarmerWorkspaceHtml(): string {
         <div class="flex items-center justify-between border-b border-brand-borderSubtle pb-2.5">
           <div class="flex items-center gap-2">
             <span class="text-base">🌾</span>
-            <h3 class="serif-title text-sm font-bold text-brand-forest">Current Season Crop Plan</h3>
+            <h3 class="text-base font-semibold text-stone-800 dark:text-stone-100">Current Season Crop Plan</h3>
           </div>
-          <button onclick="switchTab('farmer-planner')" class="text-[11px] text-brand-forest font-semibold hover:underline">
+          <button onclick="switchTab('farmer-planner')" class="text-xs text-brand-forest font-semibold hover:underline">
             Edit Crop Plan →
           </button>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div class="p-2.5 rounded-lg bg-brand-paleBg border border-brand-borderSubtle">
             <span class="text-[10px] text-gray-500 uppercase font-bold block">Crop & Variety</span>
             <p id="c-crop" class="font-bold text-gray-900 mt-0.5">Paddy (Samba)</p>
@@ -149,9 +146,9 @@ export function renderFarmerWorkspaceHtml(): string {
           <div class="flex items-center justify-between border-b border-brand-borderSubtle pb-2.5">
             <div class="flex items-center gap-1.5">
               <span class="text-base">💡</span>
-              <h3 class="serif-title text-sm font-bold text-brand-forest">Why This Recommendation?</h3>
+              <h3 class="text-base font-semibold text-stone-800 dark:text-stone-100">Why This Recommendation?</h3>
             </div>
-            <span class="text-[10px] font-bold text-brand-gold uppercase tracking-wider">Top 4 Factors</span>
+            <span class="text-[11px] font-bold text-brand-gold uppercase tracking-wider">Top 4 Factors</span>
           </div>
 
           <ul class="space-y-2 text-xs text-gray-700 mt-2.5" id="ov-why-factors">
@@ -225,9 +222,7 @@ export function renderFarmerWorkspaceHtml(): string {
   <!-- ========================================== -->
   <!-- TAB 2: MY PROFILE & 14-SECTION FARMER MASTER -->
   <!-- ========================================== -->
-  <section id="tab-farmer-profile" class="hidden space-y-4 sm:space-y-6">
-    ${renderFarmerProfile14Html()}
-  </section>
+  ${renderFarmerProfile14Html()}
 
   <!-- ========================================== -->
   <!-- TAB 3: CROP & LOAN PLAN (Multi-Step Stepper + Live Summary Panel) -->

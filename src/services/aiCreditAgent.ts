@@ -33,6 +33,16 @@ export interface AICreditAgentOutput {
   data_sources_used: Array<{ name: string; resourceId: string; type: string }>;
   assumptions: string[];
   ai_narrative_explanation: string;
+  ml_scoring?: {
+    active: boolean;
+    prediction: number;
+    risk_status: string;
+    recommended_credit_ceiling: number;
+    default_probability: number;
+    safe_probability: number;
+    confidence_score: number;
+    model_engine: string;
+  };
 }
 
 export class AICreditAgent {
@@ -130,6 +140,45 @@ export class AICreditAgent {
 
     let aiNarrative = `Based on future crop economics for ${crop} across ${area} acres in ${farmer.location}, the recommended safe credit range is ₹${safeCredit.recommended_minimum.toLocaleString("en-IN")} to ₹${safeCredit.recommended_maximum.toLocaleString("en-IN")}. Total assessment score is ${totalScore}/100.`;
 
+    // Try live FastAPI Scikit-Learn Microservice
+    let mlScoring: AICreditAgentOutput["ml_scoring"] = undefined;
+    const mlEndpoints = ["http://localhost:8000/predict", "http://127.0.0.1:8008/predict"];
+    for (const endpoint of mlEndpoints) {
+      try {
+        const mlResponse = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            land_acres: area,
+            yield_quintals: prod,
+            mandi_price: agmarknet.data.modal_price_quintal || 2450,
+            existing_debt: (farmer as any).existing_debt || farmer.profile_14?.existing_loans?.outstanding_amount || 0,
+            loan_requested: reqCredit,
+          }),
+          signal: AbortSignal.timeout(1500),
+        });
+
+        if (mlResponse.ok) {
+          const mlData = (await mlResponse.json()) as any;
+          if (typeof mlData.prediction !== "undefined") {
+            mlScoring = {
+              active: true,
+              prediction: mlData.prediction,
+              risk_status: mlData.risk_status,
+              recommended_credit_ceiling: mlData.recommended_credit_ceiling,
+              default_probability: mlData.default_probability,
+              safe_probability: mlData.safe_probability,
+              confidence_score: mlData.confidence_score,
+              model_engine: mlData.model_engine || "Scikit-Learn RandomForest + Joblib + FastAPI",
+            };
+            break;
+          }
+        }
+      } catch (e) {
+        // Continue to fallback endpoint
+      }
+    }
+
     // Try Gemini API if key exists
     if (process.env.GEMINI_API_KEY) {
       try {
@@ -188,6 +237,7 @@ export class AICreditAgent {
         `Living Expense Reserve: 25% deducted from net agricultural cashflow`,
       ],
       ai_narrative_explanation: aiNarrative,
+      ml_scoring: mlScoring,
     };
   }
 }

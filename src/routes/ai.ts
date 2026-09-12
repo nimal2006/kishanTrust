@@ -15,6 +15,40 @@ aiRouter.post("/credit-agent/evaluate", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/v1/ai/ml-predict - Directly invoke Python Scikit-Learn + FastAPI credit risk model
+aiRouter.post("/ml-predict", async (req: Request, res: Response) => {
+  const { land_acres, yield_quintals, mandi_price, existing_debt, loan_requested } = req.body;
+  const mlEndpoints = ["http://localhost:8000/predict", "http://127.0.0.1:8008/predict"];
+  
+  for (const endpoint of mlEndpoints) {
+    try {
+      const mlResponse = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          land_acres: Number(land_acres || 3.5),
+          yield_quintals: Number(yield_quintals || 85),
+          mandi_price: Number(mandi_price || 2450),
+          existing_debt: Number(existing_debt || 0),
+          loan_requested: Number(loan_requested || 200000),
+        }),
+        signal: AbortSignal.timeout(2000),
+      });
+
+      if (mlResponse.ok) {
+        const data = await mlResponse.json();
+        if (typeof (data as any).prediction !== "undefined") {
+          return res.json({ success: true, active: true, data });
+        }
+      }
+    } catch (error) {
+      // Continue to next endpoint
+    }
+  }
+
+  return res.status(503).json({ success: false, active: false, error: "FastAPI ML microservice offline" });
+});
+
 // POST /api/v1/ai/assistant - Interactive Farmer AI Assistant
 aiRouter.post("/assistant", async (req: Request, res: Response) => {
   const { farmer_id, prompt, language } = req.body;

@@ -1,17 +1,18 @@
-import { renderSidebarHtml } from "./components/navigation.js";
+import { renderDesktopSidebarHtml, renderMobileDrawerHtml } from "./components/navigation.js";
 import { renderHeaderHtml } from "./components/header.js";
 import { renderFarmerWorkspaceHtml } from "./workspaces/farmerWorkspace.js";
 import { renderFpoWorkspaceHtml } from "./workspaces/fpoWorkspace.js";
 import { renderLenderWorkspaceHtml } from "./workspaces/lenderWorkspace.js";
 import { renderModalsHtml } from "./components/modals.js";
+import { renderLoginHtml } from "./components/loginHtml.js";
 import { renderClientScript } from "./scripts/clientScript.js";
 
 export function renderDashboardHtml(): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="w-full max-w-full overflow-x-hidden min-h-screen font-sans">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>KissanTrust - Agricultural Credit Intelligence Platform</title>
   <meta name="description" content="Community-owned digital agricultural credit network stress-testing loans against future crop economics">
   <meta property="og:title" content="KissanTrust - Agricultural Credit Intelligence Platform">
@@ -155,11 +156,11 @@ export function renderDashboardHtml(): string {
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-brand-paleBg w-full max-w-full overflow-x-hidden">
-  <div class="app-root-layout flex-1 flex flex-col md:flex-row min-h-screen w-full max-w-full">
+<body class="min-h-screen flex flex-col bg-brand-paleBg w-full max-w-full overflow-x-hidden font-sans">
+  <div id="app-root" class="app-root-layout flex-1 flex flex-col md:flex-row min-h-screen w-full max-w-full overflow-x-hidden font-sans">
     <!-- Dynamic Role-Based Sidebar (Desktop) -->
     <div class="app-sidebar-container hidden md:block shrink-0">
-      ${renderSidebarHtml()}
+      ${renderDesktopSidebarHtml()}
     </div>
 
     <!-- Main Content Area -->
@@ -180,6 +181,12 @@ export function renderDashboardHtml(): string {
       </main>
     </div>
   </div>
+
+  <!-- Mobile Off-Canvas Sidebar Drawer & Backdrop -->
+  ${renderMobileDrawerHtml()}
+
+  <!-- Master Login & Auth Overlay -->
+  ${renderLoginHtml()}
 
   <!-- Master Modals & Live Drawers -->
   ${renderModalsHtml()}

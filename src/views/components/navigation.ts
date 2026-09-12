@@ -1,5 +1,5 @@
 // Navigation Component: Dynamic Role-Based Sidebar and Mobile Off-Canvas Drawer
-export function renderSidebarHtml(): string {
+export function renderDesktopSidebarHtml(): string {
   return `
   <!-- Left Sidebar (Desktop 1024px+ permanent, Tablet 768px-1023px compact) -->
   <aside id="sidebar" class="flex flex-col w-full h-full bg-white border-r border-brand-borderSubtle min-h-screen shrink-0 z-30 select-none">
@@ -42,10 +42,14 @@ export function renderSidebarHtml(): string {
       </div>
     </div>
   </aside>
+  `;
+}
 
+export function renderMobileDrawerHtml(): string {
+  return `
   <!-- Mobile Off-Canvas Drawer (Slide-In with Backdrop) -->
-  <div id="mobile-drawer-backdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden transition-opacity duration-300 md:hidden"></div>
-  <aside id="mobile-drawer" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col -translate-x-full transition-transform duration-300 ease-out md:hidden">
+  <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden transition-opacity duration-300 md:hidden"></div>
+  <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col -translate-x-full transition-transform duration-300 ease-out md:hidden">
     <div class="p-4 border-b border-brand-borderSubtle flex items-center justify-between bg-brand-paleBg">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-brand-forest text-white flex items-center justify-center font-serif text-base font-bold shadow-xs">
@@ -56,7 +60,7 @@ export function renderSidebarHtml(): string {
           <p class="text-[9px] uppercase tracking-wider text-brand-gold font-bold mt-0.5">Credit Intelligence</p>
         </div>
       </div>
-      <button onclick="toggleMobileMenu()" class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Close Menu">
+      <button onclick="toggleSidebar(false)" class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Close Menu">
         ✕
       </button>
     </div>
@@ -64,7 +68,7 @@ export function renderSidebarHtml(): string {
     <!-- Mobile Role & Case Switcher -->
     <div class="p-3 border-b border-brand-borderSubtle bg-white">
       <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Switch Workspace & Case</label>
-      <select id="mobile-persona-select" onchange="onPersonaChange(this.value); toggleMobileMenu();" class="w-full text-xs font-semibold p-2 border border-brand-borderSubtle rounded-lg bg-brand-paleBg text-brand-forest focus:ring-1 focus:ring-brand-forest">
+      <select id="mobile-persona-select" onchange="onPersonaChange(this.value); toggleSidebar(false);" class="w-full text-xs font-semibold p-2 border border-brand-borderSubtle rounded-lg bg-brand-paleBg text-brand-forest focus:ring-1 focus:ring-brand-forest">
         <optgroup label="Farmer Workspace (Demo Cases)">
           <option value="farmer-1">Case A: Ramesh Kumar (Paddy · 3.5 Ac · Strong Evidence)</option>
           <option value="farmer-2">Case B: Rajendra Patil (Tomato · 4.5 Ac · High Volatility)</option>
@@ -89,4 +93,8 @@ export function renderSidebarHtml(): string {
     </div>
   </aside>
   `;
+}
+
+export function renderSidebarHtml(): string {
+  return renderDesktopSidebarHtml() + renderMobileDrawerHtml();
 }
