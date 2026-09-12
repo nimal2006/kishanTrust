@@ -7,6 +7,7 @@ import { assessmentsRouter } from "./src/routes/assessments.js";
 import { agricultureRouter } from "./src/routes/agriculture.js";
 import { creditRouter } from "./src/routes/credit.js";
 import { consentRouter } from "./src/routes/consent.js";
+import { aiRouter } from "./src/routes/ai.js";
 import { openApiSpec } from "./src/openapi.js";
 import { renderDashboardHtml } from "./src/views/dashboardHtml.js";
 import { realtimeHub } from "./src/services/realtime.js";
@@ -26,6 +27,7 @@ app.use("/api/v1/assessments", assessmentsRouter);
 app.use("/api/v1/agriculture", agricultureRouter);
 app.use("/api/v1/credit", creditRouter);
 app.use("/api/v1/data-consent", consentRouter);
+app.use("/api/v1/ai", aiRouter);
 
 // OpenAPI JSON Schema
 app.get("/openapi.json", (_req: Request, res: Response) => {

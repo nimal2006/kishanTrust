@@ -14,6 +14,93 @@ export function renderClientScript(): string {
   let wsClient = null;
   let eventCounter = 0;
 
+  const DEFAULT_SEED_FARMERS = [
+    {
+      id: 1,
+      reference_id: "KT-TN-THIRU-0104",
+      name: "Ramesh Kumar",
+      phone: "+91-9840192831",
+      state: "Tamil Nadu",
+      district: "Thiruvallur",
+      village: "Nemam Village",
+      location: "Thiruvallur",
+      land_size_acres: 3.5,
+      crop_types: ["Samba Paddy"],
+      irrigation_type: "Borewell & Canal",
+      cultivation_cost: 68000,
+      requested_loan_amount: 200000,
+      loan_purpose: "Working capital for certified seeds, fertilizers, and seasonal harvest labour",
+      evidence_confidence_score: 88,
+      verification_status: "VERIFIED",
+      risk_tier: "LOW"
+    },
+    {
+      id: 2,
+      reference_id: "KT-MH-PUNE-0219",
+      name: "Rajendra Patil",
+      phone: "+91-9822019283",
+      state: "Maharashtra",
+      district: "Pune",
+      village: "Narayangaon",
+      location: "Narayangaon",
+      land_size_acres: 4.5,
+      crop_types: ["Tomato (High Volatility)"],
+      irrigation_type: "Drip Irrigation",
+      cultivation_cost: 145000,
+      requested_loan_amount: 250000,
+      loan_purpose: "Drip fertigation infrastructure and hybrid tomato seedling procurement",
+      evidence_confidence_score: 64,
+      verification_status: "PENDING",
+      risk_tier: "HIGH"
+    },
+    {
+      id: 3,
+      reference_id: "KT-KA-BELG-0388",
+      name: "Sunita Deshmukh",
+      phone: "+91-9448129304",
+      state: "Karnataka",
+      district: "Belagavi",
+      village: "Chikodi",
+      location: "Belagavi",
+      land_size_acres: 3.2,
+      crop_types: ["Soybean / Pomegranate"],
+      irrigation_type: "Rainfed & Farm Pond",
+      cultivation_cost: 72000,
+      requested_loan_amount: 150000,
+      loan_purpose: "Intercropping input support and organic bio-pest spray management",
+      evidence_confidence_score: 91,
+      verification_status: "VERIFIED",
+      risk_tier: "LOW"
+    }
+  ];
+
+  const DEFAULT_SEED_CONSENTS = [
+    {
+      id: 1,
+      category: "Land Records & Patta Title",
+      source: "State Agrinet / Nilam API",
+      shared_with: "Thiruvallur Agro Collective FPO",
+      updated_at: new Date().toISOString(),
+      status: "GRANTED"
+    },
+    {
+      id: 2,
+      category: "Crop Economic Model & Cashflow",
+      source: "KissanTrust Engine",
+      shared_with: "State Bank of India KCC Syndicate",
+      updated_at: new Date().toISOString(),
+      status: "GRANTED"
+    },
+    {
+      id: 3,
+      category: "Commercial Marketing Data",
+      source: "AGMARKNET APMC Ledger",
+      shared_with: "Third-Party Agri Marketing Agencies",
+      updated_at: new Date().toISOString(),
+      status: "REVOKED"
+    }
+  ];
+
   // Timeline Stages Diagnostic Data
   const TIMELINE_STAGES = {
     planning: {
@@ -83,7 +170,8 @@ export function renderClientScript(): string {
       { id: 'farmer-consent', label: 'Data & Consent', icon: '🔒', group: 'TRUST' },
       { id: 'farmer-reports', label: 'Audit Reports', icon: '📑', group: 'FINANCE' },
       { id: 'farmer-agri-data', label: 'Agricultural Data', icon: '📊', group: 'INTELLIGENCE' },
-      { id: 'farmer-repayment', label: 'Repayment Planner', icon: '🗓️', group: 'FINANCE' }
+      { id: 'farmer-repayment', label: 'Repayment Planner', icon: '🗓️', group: 'FINANCE' },
+      { id: 'farmer-ai-assistant', label: 'AI Credit Assistant', icon: '🤖', group: 'INTELLIGENCE' }
     ],
     fpo: [
       { id: 'fpo-overview', label: 'FPO Overview', icon: '🌱', group: 'COMMUNITY VERIFICATION' },
@@ -174,9 +262,21 @@ export function renderClientScript(): string {
     // Re-render nav highlights
     updateSidebarNav();
 
-    // Trigger canvas chart render if market tab opened
+    // Immediate tab-specific data rendering & chart triggers
     if (tabId === 'farmer-market') {
       setTimeout(renderMarketChart, 50);
+    } else if (tabId === 'farmer-simulator') {
+      onSimulatorChange();
+    } else if (tabId === 'farmer-planner') {
+      recalcPlannerSummary();
+    } else if (tabId === 'fpo-farmers') {
+      populateFpoDirectoryTable();
+    } else if (tabId === 'fpo-history') {
+      populateFpoHistoryTable();
+    } else if (tabId === 'lender-pipeline') {
+      populateLenderPipelineTable();
+    } else if (tabId === 'farmer-consent') {
+      renderConsentTable();
     }
   }
 
@@ -211,7 +311,10 @@ export function renderClientScript(): string {
 
   function toggleLiveDrawer() {
     const drawer = document.getElementById('event-drawer');
-    if (drawer) drawer.classList.toggle('translate-x-full');
+    if (drawer) {
+      drawer.classList.toggle('hidden');
+      drawer.classList.toggle('translate-x-full');
+    }
     const unread = document.getElementById('event-unread-badge');
     if (unread) unread.classList.add('hidden');
   }
@@ -256,12 +359,16 @@ export function renderClientScript(): string {
         + '</div>'
         + '</div>';
     }
+    drawer.classList.remove('hidden');
     drawer.classList.remove('translate-x-full');
   }
 
   function closeWhyDrawer() {
     const drawer = document.getElementById('drawer-why-recommendation');
-    if (drawer) drawer.classList.add('translate-x-full');
+    if (drawer) {
+      drawer.classList.add('translate-x-full');
+      drawer.classList.add('hidden');
+    }
   }
 
   function openAssumptionsDrawer() {
@@ -301,12 +408,16 @@ export function renderClientScript(): string {
         + '</div>'
         + '</div>';
     }
+    drawer.classList.remove('hidden');
     drawer.classList.remove('translate-x-full');
   }
 
   function closeAssumptionsDrawer() {
     const drawer = document.getElementById('drawer-assumptions');
-    if (drawer) drawer.classList.add('translate-x-full');
+    if (drawer) {
+      drawer.classList.add('translate-x-full');
+      drawer.classList.add('hidden');
+    }
   }
 
   function openConsentDrawer() {
@@ -332,12 +443,16 @@ export function renderClientScript(): string {
         + '</div>'
         + '</div>';
     }
+    drawer.classList.remove('hidden');
     drawer.classList.remove('translate-x-full');
   }
 
   function closeConsentDrawer() {
     const drawer = document.getElementById('drawer-consent-history');
-    if (drawer) drawer.classList.add('translate-x-full');
+    if (drawer) {
+      drawer.classList.add('translate-x-full');
+      drawer.classList.add('hidden');
+    }
   }
 
   // ==========================================
@@ -569,15 +684,50 @@ export function renderClientScript(): string {
       const res = await fetch('/api/v1/farmers');
       if (res.ok) {
         cachedFarmers = await res.json();
-        populateFpoDirectoryTable();
-        populateLenderPipelineTable();
       }
-      await loadFarmerData(currentFarmerId);
-      await loadConsentsData();
     } catch (e) {
       console.warn('Initial load fallback', e);
     }
+    if (!cachedFarmers || cachedFarmers.length === 0) {
+      cachedFarmers = DEFAULT_SEED_FARMERS;
+    }
+    populateFpoDirectoryTable();
+    populateLenderPipelineTable();
+    populateFpoHistoryTable();
+    await loadFarmerData(currentFarmerId);
+    await loadConsentsData();
     updateSidebarNav();
+  }
+
+  async function loadFpoData() {
+    try {
+      const res = await fetch('/api/v1/farmers');
+      if (res.ok) {
+        cachedFarmers = await res.json();
+      }
+    } catch (e) {
+      console.warn('FPO load error', e);
+    }
+    if (!cachedFarmers || cachedFarmers.length === 0) {
+      cachedFarmers = DEFAULT_SEED_FARMERS;
+    }
+    populateFpoDirectoryTable();
+    populateFpoHistoryTable();
+  }
+
+  async function loadLenderData() {
+    try {
+      const res = await fetch('/api/v1/farmers');
+      if (res.ok) {
+        cachedFarmers = await res.json();
+      }
+    } catch (e) {
+      console.warn('Lender load error', e);
+    }
+    if (!cachedFarmers || cachedFarmers.length === 0) {
+      cachedFarmers = DEFAULT_SEED_FARMERS;
+    }
+    populateLenderPipelineTable();
   }
 
   async function loadFarmerData(farmerId) {
@@ -997,14 +1147,24 @@ export function renderClientScript(): string {
   async function loadConsentsData() {
     try {
       const res = await fetch(\`/api/v1/farmers/\${currentFarmerId}/consents\`);
-      if (!res.ok) return;
-      const data = await res.json();
-      cachedConsents = data.consents || [];
-      renderConsentTable();
-      renderAuditLogs(data.audit_logs || []);
+      if (res.ok) {
+        const data = await res.json();
+        cachedConsents = data.consents || [];
+        if (cachedConsents.length > 0) {
+          renderConsentTable();
+          renderAuditLogs(data.audit_logs || []);
+          return;
+        }
+      }
     } catch (e) {
       console.warn('Error loading consents', e);
     }
+    cachedConsents = DEFAULT_SEED_CONSENTS;
+    renderConsentTable();
+    renderAuditLogs([
+      { actor: "Thiruvallur Agro Collective", action: "VERIFIED", category: "Land Records & Patta Title", timestamp: new Date().toISOString() },
+      { actor: "State Bank of India KCC", action: "ACCESSED", category: "Crop Economic Model & Cashflow", timestamp: new Date().toISOString() }
+    ]);
   }
 
   function renderConsentTable() {
@@ -1108,6 +1268,54 @@ export function renderClientScript(): string {
               View File
             </button>
           </td>
+        </tr>
+      \`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  function populateFpoHistoryTable() {
+    const tbody = document.getElementById('fpo-history-tbody');
+    if (!tbody) return;
+
+    const history = [
+      {
+        timestamp: "2026-07-25 11:30 IST",
+        farmer: "Ramesh Kumar (KT-TN-THIRU-0104)",
+        inspector: "K. Soundararajan (Lead Agronomist)",
+        action: "VERIFIED",
+        notes: "Physically inspected 3.5 acres standing Samba Paddy. Verified Patta title Patta #1042/3A and borewell connectivity."
+      },
+      {
+        timestamp: "2026-07-24 16:15 IST",
+        farmer: "Sunita Deshmukh (KT-KA-BELG-0388)",
+        inspector: "M. Patil (Belagavi Collective)",
+        action: "VERIFIED",
+        notes: "Geo-tagged pomegranate orchard perimeter and verified organic inputs purchase voucher."
+      },
+      {
+        timestamp: "2026-07-20 14:00 IST",
+        farmer: "Rajendra Patil (KT-MH-NASH-0832)",
+        inspector: "S. Deshmukh (Niphad Inspector)",
+        action: "NEEDS EVIDENCE",
+        notes: "Requested updated tomato trellising photo and notarized land title copy."
+      }
+    ];
+
+    let html = '';
+    history.forEach(h => {
+      const isVerified = h.action === 'VERIFIED';
+      html += \`
+        <tr class="hover:bg-brand-paleBg">
+          <td class="px-4 py-3 font-mono text-gray-500">\${h.timestamp}</td>
+          <td class="px-4 py-3 font-bold text-gray-900">\${h.farmer}</td>
+          <td class="px-4 py-3 text-gray-700">\${h.inspector}</td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold \${isVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              \${h.action}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-gray-600">\${h.notes}</td>
         </tr>
       \`;
     });
@@ -2368,6 +2576,184 @@ export function renderClientScript(): string {
       feed.insertBefore(item, feed.firstChild);
     }
   }
+
+  // ==========================================
+  // AI ASSISTANT & EVALUATION FUNCTIONS
+  // ==========================================
+  window.askAssistantPrompt = async (promptText) => {
+    const input = document.getElementById('ai-assistant-input');
+    if (input) input.value = promptText;
+    await sendAssistantQuery(promptText);
+  };
+
+  window.handleAssistantSubmit = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('ai-assistant-input');
+    if (!input || !input.value.trim()) return;
+    await sendAssistantQuery(input.value.trim());
+  };
+
+  async function sendAssistantQuery(promptText) {
+    const container = document.getElementById('ai-assistant-output-container');
+    const langSelect = document.getElementById('assistant-lang-select');
+    const lang = langSelect ? langSelect.value : 'en';
+
+    if (container) {
+      container.innerHTML = \`
+        <div class="flex items-center gap-2 text-gray-600">
+          <svg class="animate-spin h-4 w-4 text-brand-forest" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Consulting AGMARKNET, KCC advisories & AI Credit Agent...</span>
+        </div>
+      \`;
+    }
+
+    try {
+      const res = await fetch('/api/v1/ai/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          farmer_id: currentFarmerId,
+          prompt: promptText,
+          language: lang,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && container) {
+        const payload = data.data;
+        let sourcesHtml = '';
+        if (payload.sources_cited && payload.sources_cited.length > 0) {
+          sourcesHtml = '<div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-brand-borderSubtle"><span class="text-[10px] font-bold text-gray-500 uppercase">Data Sources Cited:</span>';
+          payload.sources_cited.forEach((s) => {
+            sourcesHtml += \`<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-sageLight text-brand-forest border border-brand-borderSubtle">\${s.source}</span>\`;
+          });
+          sourcesHtml += '</div>';
+        }
+
+        container.innerHTML = \`
+          <div class="space-y-2">
+            <div class="flex items-center justify-between font-bold text-brand-forest">
+              <span class="flex items-center gap-1.5">🤖 <span>KissanTrust AI Assistant Answer</span></span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">\${lang.toUpperCase()}</span>
+            </div>
+            <p class="text-gray-800 font-medium leading-relaxed">\${payload.answer}</p>
+            \${sourcesHtml}
+          </div>
+        \`;
+      }
+    } catch (err) {
+      if (container) {
+        container.innerHTML = \`<p class="text-rose-700 font-semibold">Failed to retrieve answer from AI Assistant. Please check server logs.</p>\`;
+      }
+    }
+  }
+
+  window.triggerAICreditEvaluation = async () => {
+    const card = document.getElementById('ai-credit-evaluation-card');
+    if (card) {
+      card.classList.remove('hidden');
+      card.innerHTML = \`
+        <div class="flex items-center gap-2 text-gray-600">
+          <svg class="animate-spin h-4 w-4 text-brand-forest" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Executing 6-Category Weighted AI Credit Scoring Model...</span>
+        </div>
+      \`;
+    }
+
+    try {
+      const res = await fetch('/api/v1/ai/credit-agent/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ farmer_id: currentFarmerId }),
+      });
+      const data = await res.json();
+      if (data.success && card) {
+        const evalData = data.data;
+        const b = evalData.scoring_breakdown;
+
+        let breakdownHtml = \`
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Evidence & Verif</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.evidence_verification.score} / \${b.evidence_verification.max} pts</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Farm Strength</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.farm_production_strength.score} / \${b.farm_production_strength.max} pts</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Market Stability</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.market_stability.score} / \${b.market_stability.max} pts</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Repayment Capacity</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.repayment_capacity.score} / \${b.repayment_capacity.max} pts</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Agro Risk</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.agricultural_risk.score} / \${b.agricultural_risk.max} pts</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-gray-50 border">
+              <span class="text-[10px] text-gray-500 font-bold uppercase block">Purpose Fit</span>
+              <p class="font-bold text-gray-900 mt-0.5">\${b.purpose_fit.score} / \${b.purpose_fit.max} pts</p>
+            </div>
+          </div>
+        \`;
+
+        let sourcesList = evalData.data_sources_used.map((s) => \`<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-paleBg text-brand-forest border">\${s.name} (\${s.type})</span>\`).join(' ');
+
+        card.innerHTML = \`
+          <div class="flex items-center justify-between border-b pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  \${evalData.eligibility}
+                </span>
+                <span class="text-xs font-mono text-gray-500">\${evalData.assessment_id}</span>
+              </div>
+              <h3 class="serif-title text-base font-bold text-brand-forest mt-1">AI Credit Agent Evaluation: \${evalData.farmer_name}</h3>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase font-bold text-gray-400 block">Overall Score</span>
+              <p class="serif-title text-2xl font-bold text-brand-forest">\${evalData.overall_score}<span class="text-xs text-gray-500 font-normal">/100</span></p>
+            </div>
+          </div>
+
+          <!-- Scoring Breakdown -->
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Weighted Scoring Model Breakdown</h4>
+            \${breakdownHtml}
+          </div>
+
+          <!-- Safe Credit Recommendation & Narrative -->
+          <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-emerald-950 uppercase text-[10px]">Recommended Safe Credit Envelope</span>
+              <span class="font-bold font-mono text-emerald-900 text-sm">₹\${evalData.recommended_safe_range.min.toLocaleString('en-IN')} – ₹\${evalData.recommended_safe_range.max.toLocaleString('en-IN')}</span>
+            </div>
+            <p class="text-emerald-900 leading-relaxed">\${evalData.ai_narrative_explanation}</p>
+          </div>
+
+          <!-- Integrated Datasets -->
+          <div class="space-y-1.5">
+            <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ground Truth Government Datasets Evaluated</h4>
+            <div class="flex flex-wrap gap-1.5">
+              \${sourcesList}
+            </div>
+          </div>
+        \`;
+      }
+    } catch (err) {
+      if (card) {
+        card.innerHTML = \`<p class="text-rose-700 text-xs font-semibold">Evaluation failed. Please try again.</p>\`;
+      }
+    }
+  };
 
   // ==========================================
   // INITIALIZE ON DOM READY

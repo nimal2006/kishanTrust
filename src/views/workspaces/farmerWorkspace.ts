@@ -1249,5 +1249,74 @@ export function renderFarmerWorkspaceHtml(): string {
       </div>
     </div>
   </section>
+
+  <!-- ========================================== -->
+  <!-- TAB 14: AI CREDIT ASSISTANT & KCC ADVISORY -->
+  <!-- ========================================== -->
+  <section id="tab-farmer-ai-assistant" class="hidden space-y-4 sm:space-y-6">
+    <div class="bg-white rounded-xl p-4 sm:p-5 border border-brand-borderSubtle card-shadow">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🤖</span>
+            <h2 class="serif-title text-base sm:text-lg font-bold text-brand-forest">AI Agricultural Credit & KCC Assistant</h2>
+          </div>
+          <p class="text-xs text-gray-500 mt-0.5">Interactive context-aware assistant powered by AGMARKNET market prices, KCC advisories, and stress test engines.</p>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <label class="text-xs text-gray-600 font-medium">Language:</label>
+          <select id="assistant-lang-select" class="px-2.5 py-1 text-xs border border-gray-300 rounded-lg bg-white font-medium">
+            <option value="en" selected>English</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Assistant Prompts -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <button onclick="askAssistantPrompt('Why is my safe credit limit set to ₹1,30,000 instead of ₹2,00,000?')" class="p-3 rounded-xl bg-white border border-brand-borderSubtle card-shadow hover:border-brand-forest hover:bg-brand-paleBg transition text-left space-y-1">
+        <span class="text-xs font-bold text-brand-forest block">💰 Loan Limit Explanation</span>
+        <p class="text-[11px] text-gray-600">"Why is my safe credit limit set to ₹1,30,000 instead of ₹2,00,000?"</p>
+      </button>
+
+      <button onclick="askAssistantPrompt('How can I improve my evidence confidence score to get higher credit?')" class="p-3 rounded-xl bg-white border border-brand-borderSubtle card-shadow hover:border-brand-forest hover:bg-brand-paleBg transition text-left space-y-1">
+        <span class="text-xs font-bold text-brand-forest block">📈 Evidence & Trust Guidance</span>
+        <p class="text-[11px] text-gray-600">"How can I improve my evidence confidence score to get higher credit?"</p>
+      </button>
+
+      <button onclick="askAssistantPrompt('What are the Kisan Call Centre pest advisories for Samba Paddy?')" class="p-3 rounded-xl bg-white border border-brand-borderSubtle card-shadow hover:border-brand-forest hover:bg-brand-paleBg transition text-left space-y-1">
+        <span class="text-xs font-bold text-brand-forest block">🌾 KCC Crop Advisory</span>
+        <p class="text-[11px] text-gray-600">"What are the Kisan Call Centre pest advisories for Samba Paddy?"</p>
+      </button>
+    </div>
+
+    <!-- Interactive Chat Console -->
+    <div class="bg-white rounded-xl p-4 sm:p-5 border border-brand-borderSubtle card-shadow space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="serif-title text-sm font-bold text-gray-800">Ask the AI Assistant</h3>
+        <button onclick="triggerAICreditEvaluation()" class="px-3 py-1 bg-brand-forest text-white text-xs rounded-lg font-bold hover:bg-brand-forestHover transition">
+          ⚡ Run Full AI Credit Evaluation
+        </button>
+      </div>
+
+      <!-- Chat Response Box -->
+      <div id="ai-assistant-output-container" class="min-h-[140px] p-4 rounded-xl bg-brand-paleBg/60 border border-brand-borderSubtle text-xs space-y-3">
+        <p class="text-gray-500 italic">Select a sample prompt above or enter a custom question below to consult the AI Agricultural Assistant.</p>
+      </div>
+
+      <!-- Custom Question Form -->
+      <form onsubmit="handleAssistantSubmit(event)" class="flex gap-2">
+        <input id="ai-assistant-input" type="text" placeholder="Type your query (e.g. How does market price drop affect my loan?)..." class="flex-1 px-3.5 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-forest focus:outline-none" required />
+        <button type="submit" class="px-4 py-2 bg-brand-forest text-white font-semibold text-xs rounded-lg hover:bg-brand-forestHover transition shrink-0">
+          Ask Assistant
+        </button>
+      </form>
+    </div>
+
+    <!-- AI Evaluation Card (Populated dynamically on trigger) -->
+    <div id="ai-credit-evaluation-card" class="hidden bg-white rounded-xl p-4 sm:p-5 border border-brand-borderSubtle card-shadow space-y-4">
+    </div>
+  </section>
   `;
 }
