@@ -1,6 +1,6 @@
 {
-  "name": "Farmer Credit Intelligence Platform",
-  "description": "Agricultural credit assessment system with verified data and community trust",
+  "name": "KissanTrust - Agricultural Credit Intelligence Platform",
+  "description": "Community-owned digital agricultural credit network stress-testing loans against future crop economics",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
